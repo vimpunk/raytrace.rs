@@ -2,7 +2,7 @@ use std::io::Write;
 use std::fs::OpenOptions;
 
 mod raytracer;
-use raytracer::{Vec3, Ray};
+use raytracer::{Vec3, unit_vec, Ray, Rgb};
 
 fn main() {
     let vec = Vec3 { x: 1.0, y: 1.0, z: 1.0 };
@@ -37,5 +37,16 @@ fn main() {
 
             write!(file, "{} {} {}\n", r, g, b);
         }
+    }
+}
+
+fn color(ray: &Ray) -> Rgb {
+    let unit_dir = unit_vec(ray.direction);
+    let t = 0.5 * (unit_dir.y + 1.0);
+    let vec = (1.0 - t) * Vec3 { x: 1.0, y: 1.0, z: 1.0 } + t * Vec3 { x: 0.5, y: 0.7, z: 1.0 };
+    Rgb {
+        r: vec.x,
+        g: vec.y,
+        b: vec.z,
     }
 }
