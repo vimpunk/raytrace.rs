@@ -1,7 +1,11 @@
 use std::io::Write;
 use std::fs::OpenOptions;
 
+mod raytracer;
+use raytracer::Vec3;
+
 fn main() {
+    let vec = Vec3 { x: 1.0, y: 1.0, z: 1.0 };
     let path = "/tmp/raytracer.ppm";
     let file = OpenOptions::new()
         .read(true)
