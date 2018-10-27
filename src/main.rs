@@ -2,10 +2,11 @@ use std::io::Write;
 use std::fs::OpenOptions;
 
 mod raytracer;
-use raytracer::Vec3;
+use raytracer::{Vec3, Ray};
 
 fn main() {
     let vec = Vec3 { x: 1.0, y: 1.0, z: 1.0 };
+    let ray = Ray { origin: vec, direction: vec };
     let path = "/tmp/raytracer.ppm";
     let file = OpenOptions::new()
         .read(true)
