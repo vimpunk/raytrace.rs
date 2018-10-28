@@ -1,5 +1,8 @@
+extern crate rand;
+
 use std::io::Write;
 use std::fs::OpenOptions;
+use rand::Rng;
 
 mod raytracer;
 use raytracer::{Vec3, dot, Hit, Ray, Rgb, Sphere};
@@ -19,6 +22,7 @@ fn main() {
     let nx = 200;
     let ny = 100;
     let cam = Camera::axis_aligned();
+    let mut rng = rand::thread_rng();
 
     write!(file, "P3\n");
     write!(file, "{} {}\n", nx, ny);
@@ -37,18 +41,25 @@ fn main() {
 
     for j in (0..ny).rev() {
         for i in 0..nx {
-            let u = i as f32 / nx as f32;
-            let v = j as f32 / ny as f32;
-            let ray = cam.ray(u, v);
+            // Anti-aliasing.
+            let mut col = Vec3 { x: 0.0, y: 0.0, z: 0.0 };
+            for _ in 0..100 {
+                let u = (i as f32 + rng.gen::<f32>()) / nx as f32;
+                let v = (j as f32 + rng.gen::<f32>()) / ny as f32;
+                let ray = cam.ray(u, v);
+                let p = ray.point_at(2.0);
+                col += Vec3::from(color(&ray, &hitables));
+            }
 
-            let color = color(&ray, &hitables);
-            let color = Rgb {
-                r: 255.99 * color.r,
-                g: 255.99 * color.g,
-                b: 255.99 * color.b,
+            col /= 100.0;
+
+            let col = Rgb {
+                r: 255.99 * col.x,
+                g: 255.99 * col.y,
+                b: 255.99 * col.z,
             };
 
-            write!(file, "{} {} {}\n", color.r as i32, color.g as i32, color.b as i32);
+            write!(file, "{} {} {}\n", col.r as i32, col.g as i32, col.b as i32);
         }
     }
 }

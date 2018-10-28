@@ -1,3 +1,4 @@
+use raytracer::rgb::Rgb;
 use std::ops::{Add, AddAssign, Sub, SubAssign, Mul, MulAssign, Div, DivAssign, Index};
 
 #[derive(Debug, Copy, Clone)]
@@ -8,6 +9,14 @@ pub struct Vec3 {
 }
 
 impl Vec3 {
+    pub fn from(rgb: Rgb) -> Vec3 {
+        Vec3 {
+            x: rgb.r,
+            y: rgb.g,
+            z: rgb.b,
+        }
+    }
+
     pub fn len(&self) -> f32 {
         self.squared_len().sqrt()
     }
