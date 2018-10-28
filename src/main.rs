@@ -2,7 +2,7 @@ use std::io::Write;
 use std::fs::OpenOptions;
 
 mod raytracer;
-use raytracer::{Vec3, dot, Ray, Rgb};
+use raytracer::{Vec3, dot, Hit, Ray, Rgb, Sphere};
 
 fn main() {
     let path = "/tmp/raytracer.ppm";
@@ -53,8 +53,8 @@ fn color(ray: &Ray) -> Rgb {
         center: Vec3 { x: 0.0, y: 0.0, z: -1.0 },
         radius: 0.5,
     };
-    if let Some(t) = hit_sphere(&sphere, &ray) {
-        let normal = (ray.point_at(t) - sphere.center).to_unit();
+    if let Some(hit) = sphere.hit(&ray, 0.0, 2.0) {
+        let normal = (ray.point_at(hit.t) - sphere.center).to_unit();
         let normal = 0.5 * Vec3 {
             x: normal.x + 1.0,
             y: normal.y + 1.0,
@@ -72,31 +72,4 @@ fn color(ray: &Ray) -> Rgb {
     let end_val = Vec3 { x: 0.5, y: 0.7, z: 1.0 };
     let ler = (1.0 - t) * start_val + t * end_val;
     Rgb::from(ler)
-}
-
-struct Sphere {
-    center: Vec3,
-    radius: f32,
-}
-
-fn hit_sphere(sphere: &Sphere, ray: &Ray) -> Option<f32> {
-    // t^2*dot(B, B) + 2t*dot(B, A-C) + dot(A-C, A-C) - R^2 = 0 
-    // where: 
-    // A = ray origin,
-    // B = ray direction,
-    // C = sphere center,
-    // R = sphere radius
-    let oc = ray.origin - sphere.center;
-    let a = dot(ray.direction, ray.direction);
-    let b = 2.0 * dot(ray.direction, oc);
-    let c = dot(oc, oc) - sphere.radius * sphere.radius;
-    let discriminant = b * b - 4.0 * a * c;
-    if discriminant < 0.0 {
-        // The ray does not hit the sphere.
-        None
-    } else {
-        // Solve the quadratic equation, which gives us the point at which the
-        // ray hits the sphere (I think).
-        Some((-b - discriminant.sqrt()) / 2.0 * a)
-    }
 }
