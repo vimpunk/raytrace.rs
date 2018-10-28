@@ -27,7 +27,7 @@ impl Hit for Sphere {
                 return Some(HitRecord {
                     t: solution,
                     p: p,
-                    normal: (p - self.center) / self.radius,
+                    normal: (p - self.center).to_unit(),
                 });
             }
 
@@ -37,7 +37,7 @@ impl Hit for Sphere {
                 return Some(HitRecord {
                     t: solution,
                     p: p,
-                    normal: (p - self.center) / self.radius,
+                    normal: (p - self.center).to_unit(),
                 });
             }
         }

@@ -27,6 +27,11 @@ fn main() {
     write!(file, "{} {}\n", nx, ny);
     write!(file, "255\n");
 
+    let sphere = Sphere {
+        center: Vec3 { x: 0.0, y: 0.0, z: -1.0 },
+        radius: 0.5,
+    };
+
     for j in (0..ny).rev() {
         for i in 0..nx {
             let u = i as f32 / nx as f32;
@@ -36,7 +41,7 @@ fn main() {
                 direction: lower_left_corner + u * horizontal + v * vertical,
             };
 
-            let color = color(&ray);
+            let color = color(&ray, &sphere);
             let color = Rgb {
                 r: 255.99 * color.r,
                 g: 255.99 * color.g,
@@ -48,28 +53,24 @@ fn main() {
     }
 }
 
-fn color(ray: &Ray) -> Rgb {
-    let sphere = Sphere {
-        center: Vec3 { x: 0.0, y: 0.0, z: -1.0 },
-        radius: 0.5,
-    };
-    if let Some(hit) = sphere.hit(&ray, 0.0, 2.0) {
-        let normal = (ray.point_at(hit.t) - sphere.center).to_unit();
+fn color<T: Hit>(ray: &Ray, world: &T) -> Rgb {
+    // See if the ray hits the world, otherwise paint the background.
+    if let Some(hit) = world.hit(&ray, 0.0, std::f32::MAX) {
         let normal = 0.5 * Vec3 {
-            x: normal.x + 1.0,
-            y: normal.y + 1.0,
-            z: normal.z + 1.0
+            x: hit.normal.x + 1.0,
+            y: hit.normal.y + 1.0,
+            z: hit.normal.z + 1.0
         };
-        return Rgb::from(normal);
+        Rgb::from(normal)
+    } else {
+        // Get unit vector so -1 < y < 1.
+        let unit_dir = ray.direction.to_unit();
+        // Scale that value to 0 < y < 1.
+        let t = 0.5 * (unit_dir.y + 1.0);
+        // Linear interpolation: blended_val = (1 - t) * start_val + t * end_val.
+        let start_val = Vec3 { x: 1.0, y: 1.0, z: 1.0 };
+        let end_val = Vec3 { x: 0.5, y: 0.7, z: 1.0 };
+        let ler = (1.0 - t) * start_val + t * end_val;
+        Rgb::from(ler)
     }
-
-    // Get unit vector so -1 < y < 1.
-    let unit_dir = ray.direction.to_unit();
-    // Scale that value to 0 < y < 1.
-    let t = 0.5 * (unit_dir.y + 1.0);
-    // Linear interpolation: blended_val = (1 - t) * start_val + t * end_val.
-    let start_val = Vec3 { x: 1.0, y: 1.0, z: 1.0 };
-    let end_val = Vec3 { x: 0.5, y: 0.7, z: 1.0 };
-    let ler = (1.0 - t) * start_val + t * end_val;
-    Rgb::from(ler)
 }
