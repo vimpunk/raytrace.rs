@@ -18,10 +18,7 @@ fn main() {
 
     let nx = 200;
     let ny = 100;
-    let lower_left_corner = Vec3 { x: -2.0, y: -1.0, z: -1.0 };
-    let horizontal = Vec3 { x: 4.0, y: 0.0, z: 0.0 };
-    let vertical = Vec3 { x: 0.0, y: 2.0, z: 0.0 };
-    let origin = Vec3 { x: 0.0, y: 0.0, z: 0.0 };
+    let cam = Camera::axis_aligned();
 
     write!(file, "P3\n");
     write!(file, "{} {}\n", nx, ny);
@@ -42,10 +39,7 @@ fn main() {
         for i in 0..nx {
             let u = i as f32 / nx as f32;
             let v = j as f32 / ny as f32;
-            let ray = Ray {
-                origin: origin,
-                direction: lower_left_corner + u * horizontal + v * vertical,
-            };
+            let ray = cam.ray(u, v);
 
             let color = color(&ray, &hitables);
             let color = Rgb {
@@ -55,6 +49,34 @@ fn main() {
             };
 
             write!(file, "{} {} {}\n", color.r as i32, color.g as i32, color.b as i32);
+        }
+    }
+}
+
+struct Camera {
+    lower_left_corner: Vec3,
+    horizontal: Vec3,
+    vertical: Vec3,
+    origin: Vec3,
+}
+
+impl Camera {
+    fn axis_aligned() -> Camera {
+        Camera {
+            lower_left_corner: Vec3 { x: -2.0, y: -1.0, z: -1.0 },
+            horizontal: Vec3 { x: 4.0, y: 0.0, z: 0.0 },
+            vertical: Vec3 { x: 0.0, y: 2.0, z: 0.0 },
+            origin: Vec3 { x: 0.0, y: 0.0, z: 0.0 },
+        }
+    }
+
+    fn ray(&self, u: f32, v: f32) -> Ray {
+        Ray {
+            origin: self.origin,
+            direction: self.lower_left_corner
+                + u * self.horizontal
+                + v * self.vertical
+                - self.origin,
         }
     }
 }
