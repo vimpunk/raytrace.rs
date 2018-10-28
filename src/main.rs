@@ -27,10 +27,16 @@ fn main() {
     write!(file, "{} {}\n", nx, ny);
     write!(file, "255\n");
 
-    let sphere = Sphere {
-        center: Vec3 { x: 0.0, y: 0.0, z: -1.0 },
-        radius: 0.5,
-    };
+    let hitables: Vec<Box<Hit>> = vec![
+        Box::new(Sphere {
+            center: Vec3 { x: 0.0, y: 0.0, z: -1.0 },
+            radius: 0.5,
+        }),
+        Box::new(Sphere {
+            center: Vec3 { x: 0.0, y: -100.5, z: -1.0 },
+            radius: 100.0,
+        }),
+    ];
 
     for j in (0..ny).rev() {
         for i in 0..nx {
@@ -41,7 +47,7 @@ fn main() {
                 direction: lower_left_corner + u * horizontal + v * vertical,
             };
 
-            let color = color(&ray, &sphere);
+            let color = color(&ray, &hitables);
             let color = Rgb {
                 r: 255.99 * color.r,
                 g: 255.99 * color.g,

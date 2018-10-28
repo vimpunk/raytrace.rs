@@ -16,3 +16,18 @@ pub trait Hit {
     /// stored in a `HitRecord`.
     fn hit(&self, ray: &Ray, min: f32, max: f32) -> Option<HitRecord>;
 }
+
+/// Hit trait for a list of 'Hit' objects.
+impl Hit for Vec<Box<Hit>> {
+    fn hit(&self, ray: &Ray, min: f32, max: f32) -> Option<HitRecord> {
+        let mut record = None;
+        let mut closest = max;
+        for hitable in self.iter() {
+            if let Some(rec) = hitable.hit(ray, min, closest) {
+                closest = rec.t;
+                record = Some(rec);
+            }
+        }
+        record
+    }
+}

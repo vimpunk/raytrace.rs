@@ -21,7 +21,7 @@ impl Hit for Sphere {
         if discriminant > 0.0 {
             // Solve the quadratic equation, which gives us the point on
             // which the ray hits the sphere.
-            let solution = (-b - discriminant.sqrt()) / 2.0 * a;
+            let solution = (-b - discriminant.sqrt()) / (2.0 * a);
             if solution > min && solution < max {
                 let p = ray.point_at(solution);
                 return Some(HitRecord {
@@ -31,7 +31,7 @@ impl Hit for Sphere {
                 });
             }
 
-            let solution = (-b + discriminant.sqrt()) / 2.0 * a;
+            let solution = (-b + discriminant.sqrt()) / (2.0 * a);
             if solution > min && solution < max {
                 let p = ray.point_at(solution);
                 return Some(HitRecord {
