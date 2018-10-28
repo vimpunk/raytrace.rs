@@ -4,3 +4,13 @@ pub struct Rgb {
     pub g: f32,
     pub b: f32,
 }
+
+impl Rgb {
+    pub fn from(v: Vec3) -> Rgb {
+        Rgb {
+            r: v.x,
+            g: v.y,
+            b: v.z,
+        }
+    }
+}

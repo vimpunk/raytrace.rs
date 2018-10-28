@@ -43,10 +43,6 @@ fn main() {
                 b: 255.99 * color.b,
             };
 
-            //let r = (255.99 * color.r) as i32;
-            //let g = (255.99 * color.g) as i32;
-            //let b = (255.99 * color.b) as i32;
-
             write!(file, "{} {} {}\n", color.r as i32, color.g as i32, color.b as i32);
         }
     }
@@ -57,8 +53,14 @@ fn color(ray: &Ray) -> Rgb {
         center: Vec3 { x: 0.0, y: 0.0, z: -1.0 },
         radius: 0.5,
     };
-    if hits_sphere(&sphere, &ray) {
-        return Rgb { r: 1.0, g: 0.0, b: 0.0 }
+    if let Some(t) = hit_sphere(&sphere, &ray) {
+        let normal = (ray.point_at(t) - sphere.center).unit();
+        let normal = 0.5 * Vec3 {
+            x: normal.x + 1.0,
+            y: normal.y + 1.0,
+            z: normal.z + 1.0
+        };
+        return Rgb::from(normal);
     }
 
     // Get unit vector so -1 < y < 1.
@@ -66,12 +68,10 @@ fn color(ray: &Ray) -> Rgb {
     // Scale that value to 0 < y < 1.
     let t = 0.5 * (unit_dir.y + 1.0);
     // Linear interpolation: blended_val = (1 - t) * start_val + t * end_val.
-    let ler = (1.0 - t) * Vec3 { x: 1.0, y: 1.0, z: 1.0 } + t * Vec3 { x: 0.5, y: 0.7, z: 1.0 };
-    Rgb {
-        r: ler.x,
-        g: ler.y,
-        b: ler.z,
-    }
+    let start_val = Vec3 { x: 1.0, y: 1.0, z: 1.0 };
+    let end_val = Vec3 { x: 0.5, y: 0.7, z: 1.0 };
+    let ler = (1.0 - t) * start_val + t * end_val;
+    Rgb::from(ler)
 }
 
 struct Sphere {
@@ -79,7 +79,7 @@ struct Sphere {
     radius: f32,
 }
 
-fn hits_sphere(sphere: &Sphere, ray: &Ray) -> bool {
+fn hit_sphere(sphere: &Sphere, ray: &Ray) -> Option<f32> {
     // t^2*dot(B, B) + 2t*dot(B, A-C) + dot(A-C, A-C) - R^2 = 0 
     // where: 
     // A = ray origin,
@@ -91,5 +91,12 @@ fn hits_sphere(sphere: &Sphere, ray: &Ray) -> bool {
     let b = 2.0 * dot(ray.direction, oc);
     let c = dot(oc, oc) - sphere.radius * sphere.radius;
     let discriminant = b * b - 4.0 * a * c;
-    discriminant > 0.0
+    if discriminant < 0.0 {
+        // The ray does not hit the sphere.
+        None
+    } else {
+        // Solve the quadratic equation, which gives us the point at which the
+        // ray hits the sphere (I think).
+        Some((-b - discriminant.sqrt()) / 2.0 * a)
+    }
 }
