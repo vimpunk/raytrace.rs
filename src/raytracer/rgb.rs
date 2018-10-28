@@ -1,3 +1,5 @@
+use raytracer::vec3::Vec3;
+
 #[derive(Debug, Copy, Clone)]
 pub struct Rgb {
     pub r: f32,

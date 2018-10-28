@@ -54,7 +54,7 @@ fn color(ray: &Ray) -> Rgb {
         radius: 0.5,
     };
     if let Some(t) = hit_sphere(&sphere, &ray) {
-        let normal = (ray.point_at(t) - sphere.center).unit();
+        let normal = (ray.point_at(t) - sphere.center).to_unit();
         let normal = 0.5 * Vec3 {
             x: normal.x + 1.0,
             y: normal.y + 1.0,
@@ -64,7 +64,7 @@ fn color(ray: &Ray) -> Rgb {
     }
 
     // Get unit vector so -1 < y < 1.
-    let unit_dir = ray.direction.unit();
+    let unit_dir = ray.direction.to_unit();
     // Scale that value to 0 < y < 1.
     let t = 0.5 * (unit_dir.y + 1.0);
     // Linear interpolation: blended_val = (1 - t) * start_val + t * end_val.
