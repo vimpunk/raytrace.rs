@@ -16,7 +16,7 @@ impl Vec3 {
         self.x * self.x + self.y * self.y + self.z * self.z
     }
 
-    pub fn unit_vec(&self) -> Vec3 {
+    pub fn unit(&self) -> Vec3 {
         let k = 1.0 / self.len();
         Vec3 {
             x: self.x * k,
@@ -170,18 +170,14 @@ impl Index<usize> for Vec3 {
     }
 }
 
-pub fn dot(a: &Vec3, b: &Vec3) -> f32 {
+pub fn dot(a: Vec3, b: Vec3) -> f32 {
     a.x * b.x + a.y * b.y + a.z * b.z
 }
 
-pub fn cross(a: &Vec3, b: &Vec3) -> Vec3 {
+pub fn cross(a: Vec3, b: Vec3) -> Vec3 {
     Vec3 {
         x: a.y * b.z - a.z * b.y,
         y: -(a.x * b.z - a.z * b.x),
         z: a.x * b.y - a.y * b.x
     }
-}
-
-pub fn unit_vec(v: Vec3) -> Vec3 {
-    v / v.len()
 }

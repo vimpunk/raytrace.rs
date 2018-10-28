@@ -2,7 +2,7 @@ use std::io::Write;
 use std::fs::OpenOptions;
 
 mod raytracer;
-use raytracer::{Vec3, unit_vec, Ray, Rgb};
+use raytracer::{Vec3, dot, Ray, Rgb};
 
 fn main() {
     let path = "/tmp/raytracer.ppm";
@@ -33,7 +33,7 @@ fn main() {
             let v = j as f32 / ny as f32;
             let ray = Ray {
                 origin: origin,
-                direction: lower_left_corner + u * horizontal + v * vertical
+                direction: lower_left_corner + u * horizontal + v * vertical,
             };
 
             let color = color(&ray);
@@ -53,8 +53,16 @@ fn main() {
 }
 
 fn color(ray: &Ray) -> Rgb {
+    let sphere = Sphere {
+        center: Vec3 { x: 0.0, y: 0.0, z: -1.0 },
+        radius: 0.5,
+    };
+    if hits_sphere(&sphere, &ray) {
+        return Rgb { r: 1.0, g: 0.0, b: 0.0 }
+    }
+
     // Get unit vector so -1 < y < 1.
-    let unit_dir = unit_vec(ray.direction);
+    let unit_dir = ray.direction.unit();
     // Scale that value to 0 < y < 1.
     let t = 0.5 * (unit_dir.y + 1.0);
     // Linear interpolation: blended_val = (1 - t) * start_val + t * end_val.
@@ -64,4 +72,24 @@ fn color(ray: &Ray) -> Rgb {
         g: ler.y,
         b: ler.z,
     }
+}
+
+struct Sphere {
+    center: Vec3,
+    radius: f32,
+}
+
+fn hits_sphere(sphere: &Sphere, ray: &Ray) -> bool {
+    // t^2*dot(B, B) + 2t*dot(B, A-C) + dot(A-C, A-C) - R^2 = 0 
+    // where: 
+    // A = ray origin,
+    // B = ray direction,
+    // C = sphere center,
+    // R = sphere radius
+    let oc = ray.origin - sphere.center;
+    let a = dot(ray.direction, ray.direction);
+    let b = 2.0 * dot(ray.direction, oc);
+    let c = dot(oc, oc) - sphere.radius * sphere.radius;
+    let discriminant = b * b - 4.0 * a * c;
+    discriminant > 0.0
 }
