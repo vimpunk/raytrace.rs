@@ -5,7 +5,8 @@ use std::fs::OpenOptions;
 use rand::Rng;
 
 mod raytracer;
-use raytracer::{Vec3, Hit, Ray, Rgb, Sphere};
+use raytracer::{Vec3, Hit, Ray, Rgb};
+use raytracer::{Lambertian, Reflective, Sphere};
 
 fn main() {
     let path = "/tmp/raytracer.ppm";
@@ -19,8 +20,8 @@ fn main() {
         Err(msg) => panic!("Could not open file: {}", msg),
     };
 
-    let width = 200;
-    let height = 100;
+    let width = 800;
+    let height = 400;
     let n_aa_samples = 100;
     let cam = Camera::axis_aligned();
     let mut rng = rand::thread_rng();
@@ -29,14 +30,30 @@ fn main() {
     write!(file, "{} {}\n", width, height);
     write!(file, "255\n");
 
-    let hitables: Vec<Box<Hit>> = vec![
+    let world: Vec<Box<dyn Hit>> = vec![
         Box::new(Sphere {
             center: Vec3 { x: 0.0, y: 0.0, z: -1.0 },
             radius: 0.5,
+            material: Box::new(Lambertian {
+                albedo: Vec3 { x: 0.8, y: 0.3, z: 0.3 }
+            }),
         }),
         Box::new(Sphere {
             center: Vec3 { x: 0.0, y: -100.5, z: -1.0 },
             radius: 100.0,
+            material: Box::new(Lambertian {
+                albedo: Vec3 { x: 0.8, y: 0.8, z: 0.0 }
+            }),
+        }),
+        Box::new(Sphere {
+            center: Vec3 { x: 1.0, y: 0.0, z: -1.0 },
+            radius: 0.5,
+            material: Box::new(Reflective { albedo: Vec3 { x: 0.8, y: 0.6, z: 0.2 } }),
+        }),
+        Box::new(Sphere {
+            center: Vec3 { x: -1.0, y: 0.0, z: -1.0 },
+            radius: 0.5,
+            material: Box::new(Reflective { albedo: Vec3 { x: 0.8, y: 0.8, z: 0.8 } }),
         }),
     ];
 
@@ -48,7 +65,7 @@ fn main() {
                 let u = (i as f32 + rng.gen::<f32>()) / width as f32;
                 let v = (j as f32 + rng.gen::<f32>()) / height as f32;
                 let ray = cam.ray(u, v);
-                col += color(&ray, &hitables);
+                col += color(&ray, &world, 0);
             }
             col /= n_aa_samples as f32;
             let col = Rgb {
@@ -90,11 +107,17 @@ impl Camera {
     }
 }
 
-fn color<T: Hit>(ray: &Ray, world: &T) -> Vec3 {
+fn color<T: Hit>(ray: &Ray, world: &T, depth: i32) -> Vec3 {
     // See if the ray hits the world, otherwise paint the background.
     if let Some(hit) = world.hit(&ray, 0.001, std::f32::MAX) {
-        let target = hit.p + hit.normal + rand_in_unit_sphere();
-        0.5 * color(&Ray { origin: hit.p, direction: target - hit.p }, world)
+        let neutral = Vec3 { x: 0.0, y: 0.0, z: 0.0 };
+        if depth >= 50 {
+            neutral
+        } else if let Some(scatter) = hit.material.scatter(ray, hit.point, hit.normal) {
+            scatter.attenuation * color(&scatter.ray, world, depth + 1)
+        } else {
+            neutral
+        }
     } else {
         // Get unit vector so -1 < y < 1.
         let unit_dir = ray.direction.to_unit();
@@ -105,19 +128,5 @@ fn color<T: Hit>(ray: &Ray, world: &T) -> Vec3 {
         let end_val = Vec3 { x: 0.5, y: 0.7, z: 1.0 };
         let ler = (1.0 - t) * start_val + t * end_val;
         ler
-    }
-}
-
-fn rand_in_unit_sphere() -> Vec3 {
-    loop {
-        let v = 2.0 * Vec3 {
-            x: rand::thread_rng().gen(),
-            y: rand::thread_rng().gen(),
-            z: rand::thread_rng().gen(),
-        } - Vec3 { x: 1.0, y: 1.0, z: 1.0 };
-
-        if v.squared_len() >= 1.0 {
-            return v;
-        }
     }
 }

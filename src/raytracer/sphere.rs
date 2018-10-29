@@ -1,14 +1,21 @@
 use raytracer::hit::*;
 use raytracer::ray::*;
+use raytracer::scatter::*;
 use raytracer::vec3::*;
 
 pub struct Sphere {
     pub center: Vec3,
     pub radius: f32,
+    pub material: Box<dyn Scatter>,
 }
 
 impl Hit for Sphere {
-    fn hit(&self, ray: &Ray, min: f32, max: f32) -> Option<HitRecord> {
+    fn hit<'a, 'b: 'a>(
+        &'b self,
+        ray: &Ray,
+        min: f32,
+        max: f32,
+    ) -> Option<HitRecord<'a>> {
         // t^2*dot(B, B) + 2t*dot(B, A-C) + dot(A-C, A-C) - R^2 = 0 where:
         // A = ray origin, B = ray direction, C = sphere center, R = sphere
         // radius
@@ -23,21 +30,23 @@ impl Hit for Sphere {
             // which when the ray is advanced, it will hit the sphere.
             let solution = (-b - discriminant.sqrt()) / (2.0 * a);
             if solution > min && solution < max {
-                let p = ray.point_at(solution);
+                let point = ray.point_at(solution);
                 return Some(HitRecord {
                     t: solution,
-                    p: p,
-                    normal: (p - self.center).to_unit(),
+                    point: point,
+                    normal: (point - self.center).to_unit(),
+                    material: &*self.material,
                 });
             }
 
             let solution = (-b + discriminant.sqrt()) / (2.0 * a);
             if solution > min && solution < max {
-                let p = ray.point_at(solution);
+                let point = ray.point_at(solution);
                 return Some(HitRecord {
                     t: solution,
-                    p: p,
-                    normal: (p - self.center).to_unit(),
+                    point: point,
+                    normal: (point - self.center).to_unit(),
+                    material: &*self.material,
                 });
             }
         }
@@ -45,4 +54,3 @@ impl Hit for Sphere {
         None
     }
 }
-
