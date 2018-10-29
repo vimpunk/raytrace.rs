@@ -5,7 +5,7 @@ use std::fs::OpenOptions;
 use rand::Rng;
 
 mod raytracer;
-use raytracer::{Vec3, dot, Hit, Ray, Rgb, Sphere};
+use raytracer::{Vec3, Hit, Ray, Rgb, Sphere};
 
 fn main() {
     let path = "/tmp/raytracer.ppm";
