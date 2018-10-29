@@ -1,9 +1,14 @@
 use raytracer::ray::Ray;
 use raytracer::vec3::Vec3;
 
+/// Describes how a ray hit an object (implementing the `Hit` trait).
 pub struct HitRecord {
+    /// The offset parameter with which to advance ray to get the point at which
+    /// it hits the object.
     pub t: f32,
+    /// The point at which ray hits the object.
     pub p: Vec3,
+    /// The surface normal.
     pub normal: Vec3,
 }
 

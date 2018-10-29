@@ -19,8 +19,8 @@ impl Hit for Sphere {
         let discriminant = b * b - 4.0 * a * c;
 
         if discriminant > 0.0 {
-            // Solve the quadratic equation, which gives us the point on
-            // which the ray hits the sphere.
+            // Solve the quadratic equation, which gives us the `t` offset with
+            // which when the ray is advanced, it will hit the sphere.
             let solution = (-b - discriminant.sqrt()) / (2.0 * a);
             if solution > min && solution < max {
                 let p = ray.point_at(solution);

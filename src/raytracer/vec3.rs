@@ -26,12 +26,7 @@ impl Vec3 {
     }
 
     pub fn to_unit(&self) -> Vec3 {
-        let k = 1.0 / self.len();
-        Vec3 {
-            x: self.x * k,
-            y: self.y * k,
-            z: self.z * k,
-        }
+        *self / self.len()
     }
 }
 
