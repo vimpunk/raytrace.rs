@@ -15,7 +15,7 @@ fn main() {
         .write(true)
         .create/*_new*/(true)
         .open(&path);
-    let mut file = match file {
+    let file = match file {
         Ok(file) => file,
         Err(msg) => panic!("Could not open file: {}", msg),
     };
@@ -120,10 +120,9 @@ fn color<T: Hit>(ray: &Ray, world: &T, depth: i32) -> Vec3 {
             neutral
         }
     } else {
-        // Get unit vector so -1 < y < 1.
-        let unit_dir = ray.direction.to_unit();
-        // Scale that value to 0 < y < 1.
-        let t = 0.5 * (unit_dir.y + 1.0);
+        // Get unit vector of ray's direction so -1 < y < 1 and scale that value
+        // to 0 < y < 1.
+        let t = 0.5 * (ray.direction.to_unit().y + 1.0);
         // Linear interpolation: blended_val = (1 - t) * start_val + t * end_val.
         let start_val = Vec3 { x: 1.0, y: 1.0, z: 1.0 };
         let end_val = Vec3 { x: 0.5, y: 0.7, z: 1.0 };

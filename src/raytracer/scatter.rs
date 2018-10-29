@@ -65,5 +65,17 @@ impl Scatter for Reflective {
 }
 
 fn reflect(v: Vec3, normal: Vec3) -> Vec3 {
+    // v  n   r
+    // \  |  /|
+    //  \ | / | b
+    //   \|/  |
+    // --------
+    //    \   |
+    //     \  | b
+    //      \ |
+    //       v
+    //
+    // |b| = dot(v, n)
+    // Scale n to b's length and subtract from v to get r.
     v - 2.0 * dot(v, normal) * normal
 }
