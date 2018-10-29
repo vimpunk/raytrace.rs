@@ -1,6 +1,6 @@
 extern crate rand;
 
-use std::io::Write;
+use std::io::{BufWriter, Write};
 use std::fs::OpenOptions;
 use rand::Rng;
 
@@ -19,6 +19,7 @@ fn main() {
         Ok(file) => file,
         Err(msg) => panic!("Could not open file: {}", msg),
     };
+    let mut file = BufWriter::new(file);
 
     let width = 800;
     let height = 400;
