@@ -19,13 +19,13 @@ fn main() {
         Err(msg) => panic!("Could not open file: {}", msg),
     };
 
-    let nx = 200;
-    let ny = 100;
+    let width = 200;
+    let height = 100;
     let cam = Camera::axis_aligned();
     let mut rng = rand::thread_rng();
 
     write!(file, "P3\n");
-    write!(file, "{} {}\n", nx, ny);
+    write!(file, "{} {}\n", width, height);
     write!(file, "255\n");
 
     let hitables: Vec<Box<Hit>> = vec![
@@ -39,15 +39,14 @@ fn main() {
         }),
     ];
 
-    for j in (0..ny).rev() {
-        for i in 0..nx {
+    for j in (0..height).rev() {
+        for i in 0..width {
             // Anti-aliasing.
             let mut col = Vec3 { x: 0.0, y: 0.0, z: 0.0 };
             for _ in 0..100 {
-                let u = (i as f32 + rng.gen::<f32>()) / nx as f32;
-                let v = (j as f32 + rng.gen::<f32>()) / ny as f32;
+                let u = (i as f32 + rng.gen::<f32>()) / width as f32;
+                let v = (j as f32 + rng.gen::<f32>()) / height as f32;
                 let ray = cam.ray(u, v);
-                let p = ray.point_at(2.0);
                 col += Vec3::from(color(&ray, &hitables));
             }
 
