@@ -22,7 +22,7 @@ fn main() {
 
     let width = 800;
     let height = 400;
-    let n_aa_samples = 100;
+    let n_aa_samples = 24;
     let cam = Camera::axis_aligned();
     let mut rng = rand::thread_rng();
 
@@ -48,7 +48,7 @@ fn main() {
         Box::new(Sphere {
             center: Vec3 { x: 1.0, y: 0.0, z: -1.0 },
             radius: 0.5,
-            material: Box::new(Reflective { albedo: Vec3 { x: 0.8, y: 0.6, z: 0.2 } }),
+            material: Box::new(Reflective { albedo: Vec3 { x: 0.4, y: 0.6, z: 0.8 } }),
         }),
         Box::new(Sphere {
             center: Vec3 { x: -1.0, y: 0.0, z: -1.0 },

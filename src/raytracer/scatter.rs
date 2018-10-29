@@ -32,12 +32,10 @@ impl Scatter for Lambertian {
 
 fn rand_point_in_unit_sphere() -> Vec3 {
     // TODO optimize this
+    let mut rng = rand::thread_rng();
     loop {
-        let v = 2.0 * Vec3 {
-            x: rand::thread_rng().gen(),
-            y: rand::thread_rng().gen(),
-            z: rand::thread_rng().gen(),
-        } - Vec3 { x: 1.0, y: 1.0, z: 1.0 };
+        let v = 2.0 * Vec3 { x: rng.gen(), y: rng.gen(), z: rng.gen(), }
+            - Vec3 { x: 1.0, y: 1.0, z: 1.0 };
 
         if v.squared_len() >= 1.0 {
             return v;
