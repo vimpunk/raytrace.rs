@@ -45,18 +45,20 @@ fn rand_point_in_unit_sphere() -> Vec3 {
 
 pub struct Reflective {
     pub albedo: Vec3,
+    pub fuzz: f32,
 }
 
 impl Scatter for Reflective {
     fn scatter(&self, ray: &Ray, point: Vec3, normal: Vec3) -> Option<ScatterRecord> {
         let reflected = reflect(ray.direction.to_unit(), normal);
         if dot(reflected, normal) > 0.0 {
+            let scattered_ray = Ray {
+                origin: point,
+                direction: reflected + self.fuzz * rand_point_in_unit_sphere(),
+            };
             Some(ScatterRecord {
                 attenuation: self.albedo,
-                ray: Ray {
-                    origin: point,
-                    direction: reflected,
-                },
+                ray: scattered_ray,
             })
         } else {
             None

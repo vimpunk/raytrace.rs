@@ -49,12 +49,18 @@ fn main() {
         Box::new(Sphere {
             center: Vec3 { x: 1.0, y: 0.0, z: -1.0 },
             radius: 0.5,
-            material: Box::new(Reflective { albedo: Vec3 { x: 0.4, y: 0.6, z: 0.8 } }),
+            material: Box::new(Reflective {
+                albedo: Vec3 { x: 0.4, y: 0.6, z: 0.8 },
+                fuzz: 0.9,
+            }),
         }),
         Box::new(Sphere {
             center: Vec3 { x: -1.0, y: 0.0, z: -1.0 },
             radius: 0.5,
-            material: Box::new(Reflective { albedo: Vec3 { x: 0.8, y: 0.8, z: 0.8 } }),
+            material: Box::new(Reflective {
+                albedo: Vec3 { x: 0.8, y: 0.8, z: 0.8 },
+                fuzz: 0.3,
+            }),
         }),
     ];
 
