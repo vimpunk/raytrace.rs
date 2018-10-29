@@ -11,7 +11,8 @@ pub struct HitRecord<'a> {
     pub point: Vec3,
     /// The surface normal.
     pub normal: Vec3,
-    /// The material hit by this ray.
+    /// The material hit by this ray. This is a reference to the material stored
+    /// in object hit by the ray.
     pub material: &'a dyn Scatter,
 }
 
@@ -25,7 +26,7 @@ pub trait Hit {
     fn hit<'a, 'b: 'a>(&'b self, ray: &Ray, min: f32, max: f32) -> Option<HitRecord<'a>>;
 }
 
-/// Hit trait for a list of 'Hit' objects.
+/// 'Hit' trait implementation for a list of 'Hit' objects.
 impl Hit for Vec<Box<dyn Hit>> {
     fn hit<'a, 'b: 'a>(
         &'b self,
