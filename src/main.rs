@@ -21,6 +21,7 @@ fn main() {
 
     let width = 200;
     let height = 100;
+    let n_aa_samples = 100;
     let cam = Camera::axis_aligned();
     let mut rng = rand::thread_rng();
 
@@ -43,19 +44,17 @@ fn main() {
         for i in 0..width {
             // Anti-aliasing.
             let mut col = Vec3 { x: 0.0, y: 0.0, z: 0.0 };
-            for _ in 0..100 {
+            for _ in 0..n_aa_samples {
                 let u = (i as f32 + rng.gen::<f32>()) / width as f32;
                 let v = (j as f32 + rng.gen::<f32>()) / height as f32;
                 let ray = cam.ray(u, v);
-                col += Vec3::from(color(&ray, &hitables));
+                col += color(&ray, &hitables);
             }
-
-            col /= 100.0;
-
+            col /= n_aa_samples as f32;
             let col = Rgb {
-                r: 255.99 * col.x,
-                g: 255.99 * col.y,
-                b: 255.99 * col.z,
+                r: 255.99 * col.x.sqrt(),
+                g: 255.99 * col.y.sqrt(),
+                b: 255.99 * col.z.sqrt(),
             };
 
             write!(file, "{} {} {}\n", col.r as i32, col.g as i32, col.b as i32);
@@ -91,15 +90,11 @@ impl Camera {
     }
 }
 
-fn color<T: Hit>(ray: &Ray, world: &T) -> Rgb {
+fn color<T: Hit>(ray: &Ray, world: &T) -> Vec3 {
     // See if the ray hits the world, otherwise paint the background.
-    if let Some(hit) = world.hit(&ray, 0.0, std::f32::MAX) {
-        let normal = 0.5 * Vec3 {
-            x: hit.normal.x + 1.0,
-            y: hit.normal.y + 1.0,
-            z: hit.normal.z + 1.0
-        };
-        Rgb::from(normal)
+    if let Some(hit) = world.hit(&ray, 0.001, std::f32::MAX) {
+        let target = hit.p + hit.normal + rand_in_unit_sphere();
+        0.5 * color(&Ray { origin: hit.p, direction: target - hit.p }, world)
     } else {
         // Get unit vector so -1 < y < 1.
         let unit_dir = ray.direction.to_unit();
@@ -109,6 +104,20 @@ fn color<T: Hit>(ray: &Ray, world: &T) -> Rgb {
         let start_val = Vec3 { x: 1.0, y: 1.0, z: 1.0 };
         let end_val = Vec3 { x: 0.5, y: 0.7, z: 1.0 };
         let ler = (1.0 - t) * start_val + t * end_val;
-        Rgb::from(ler)
+        ler
+    }
+}
+
+fn rand_in_unit_sphere() -> Vec3 {
+    loop {
+        let v = 2.0 * Vec3 {
+            x: rand::thread_rng().gen(),
+            y: rand::thread_rng().gen(),
+            z: rand::thread_rng().gen(),
+        } - Vec3 { x: 1.0, y: 1.0, z: 1.0 };
+
+        if v.squared_len() >= 1.0 {
+            return v;
+        }
     }
 }
