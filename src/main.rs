@@ -1,12 +1,13 @@
 extern crate rand;
 
+mod raytracer;
+
 use std::io::{BufWriter, Write};
 use std::fs::OpenOptions;
 use rand::Rng;
 
-mod raytracer;
 use raytracer::{Vec3, Hit, Ray, Rgb};
-use raytracer::{Lambertian, Reflective, Sphere};
+use raytracer::{Dielectric, Lambertian, Reflective, Sphere};
 
 fn main() {
     let path = "/tmp/raytracer.ppm";
@@ -24,6 +25,7 @@ fn main() {
     let width = 800;
     let height = 400;
     let n_aa_samples = 24;
+
     let cam = Camera::axis_aligned();
     let mut rng = rand::thread_rng();
 
@@ -57,11 +59,16 @@ fn main() {
         Box::new(Sphere {
             center: Vec3 { x: -1.0, y: 0.0, z: -1.0 },
             radius: 0.5,
-            material: Box::new(Reflective {
-                albedo: Vec3 { x: 0.8, y: 0.8, z: 0.8 },
-                fuzz: 0.3,
-            }),
+            material: Box::new(Dielectric { refraction_index: 1.5 }),
         }),
+        //Box::new(Sphere {
+            //center: Vec3 { x: -1.0, y: 0.0, z: -1.0 },
+            //radius: 0.5,
+            //material: Box::new(Reflective {
+                //albedo: Vec3 { x: 0.8, y: 0.8, z: 0.8 },
+                //fuzz: 0.3,
+            //}),
+        //}),
     ];
 
     for j in (0..height).rev() {

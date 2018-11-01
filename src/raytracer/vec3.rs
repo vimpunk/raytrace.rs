@@ -22,7 +22,7 @@ impl Vec3 {
     }
 
     pub fn squared_len(&self) -> f32 {
-        self.x * self.x + self.y * self.y + self.z * self.z
+        self.x.powi(2) + self.y.powi(2) + self.z.powi(2)
     }
 
     pub fn to_unit(&self) -> Vec3 {
@@ -104,8 +104,8 @@ impl Mul<Vec3> for f32 {
 
 impl MulAssign for Vec3 {
     fn mul_assign(&mut self, other: Vec3) {
-        self.x *= other.y;
-        self.y *= other.z;
+        self.x *= other.x;
+        self.y *= other.y;
         self.z *= other.z;
     }
 }
