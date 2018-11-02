@@ -106,6 +106,9 @@ impl Scatter for Dielectric {
 
         if let Some(refracted) = refract(ray.direction, outward_normal, ni_over_nt) {
             let scattered = {
+                // Dielectric materials have reflectivity that varies with
+                // angle, use Christophe Schlick's to get a polinomial
+                // approximation of the probability of reflectoin.
                 let reflection_prob = schlick(cos, self.refraction_index);
                 if rand::thread_rng().gen::<f32>() >= reflection_prob {
                     refracted

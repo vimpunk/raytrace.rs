@@ -5,8 +5,7 @@ mod raytracer;
 use std::io::{BufWriter, Write};
 use std::fs::OpenOptions;
 use rand::Rng;
-
-use raytracer::{cross, Hit, Ray, Rgb, Vec3};
+use raytracer::{Camera, CameraInfo, Hit, Ray, Rgb, Vec3};
 use raytracer::{Dielectric, Lambertian, Reflective, Sphere};
 
 fn main() {
@@ -28,16 +27,20 @@ fn main() {
     let height = 400;
     let n_aa_samples = 24;
 
-    let look_from = Vec3 { x: -1.0, y: 1.0, z: 1.0 };
-    let look_to = Vec3 { x: 0.0, y: 0.0, z: -1.0 };
-    let vert_up = Vec3 { x: 0.0, y: 1.0, z: 0.0 };
-    let cam = Camera::new(
-        look_from,
-        look_to,
-        vert_up,
-        40 as f32,
-        width as f32 / height as f32
-    );
+    let look_from = Vec3 { x: -1.5, y: 1.0, z: 1.0 };
+    let look_at = Vec3 { x: 0.0, y: 0.0, z: -1.0 };
+    let view_up = Vec3 { x: 0.0, y: 1.0, z: 0.0 };
+    let aperture = 0.1;
+    let focus_dist = (look_from - look_at).len();
+    let cam = Camera::new(CameraInfo {
+        look_from: look_from,
+        look_at: look_at,
+        view_up: view_up,
+        vert_fov: 40 as f32,
+        aspect: width as f32 / height as f32,
+        aperture: aperture,
+        focus_distance: focus_dist,
+    });
     let cam = Camera::axis_aligned();
 
     write!(file, "P3\n");
@@ -56,7 +59,7 @@ fn main() {
             center: Vec3 { x: 0.0, y: -100.5, z: -1.0 },
             radius: 100.0,
             material: Box::new(Lambertian {
-                albedo: Vec3 { x: 0.8, y: 0.8, z: 0.0 }
+                albedo: Vec3 { x: 0.5, y: 0.5, z: 0.5 }
             }),
         }),
         Box::new(Sphere {
@@ -67,28 +70,28 @@ fn main() {
                 fuzz: 0.9,
             }),
         }),
-        Box::new(Sphere {
-            center: Vec3 { x: -1.0, y: 0.0, z: -1.0 },
-            radius: 0.5,
-            material: Box::new(Dielectric { refraction_index: 1.5 }),
-        }),
         //Box::new(Sphere {
             //center: Vec3 { x: -1.0, y: 0.0, z: -1.0 },
             //radius: 0.5,
-            //material: Box::new(Reflective {
-                //albedo: Vec3 { x: 0.8, y: 0.8, z: 0.8 },
-                //fuzz: 0.3,
-            //}),
+            //material: Box::new(Dielectric { refraction_index: 1.5 }),
         //}),
+        Box::new(Sphere {
+            center: Vec3 { x: -1.0, y: 0.0, z: -1.0 },
+            radius: 0.5,
+            material: Box::new(Reflective {
+                albedo: Vec3 { x: 0.8, y: 0.8, z: 0.8 },
+                fuzz: 0.3,
+            }),
+        }),
     ];
 
-    for j in (0..height).rev() {
-        for i in 0..width {
+    for y in (0..height).rev() {
+        for x in 0..width {
             // Anti-aliasing.
             let mut col = Vec3 { x: 0.0, y: 0.0, z: 0.0 };
             for _ in 0..n_aa_samples {
-                let u = (i as f32 + rng.gen::<f32>()) / width as f32;
-                let v = (j as f32 + rng.gen::<f32>()) / height as f32;
+                let u = (x as f32 + rng.gen::<f32>()) / width as f32;
+                let v = (y as f32 + rng.gen::<f32>()) / height as f32;
                 let ray = cam.ray(u, v);
                 col += color(&ray, &world, 0);
             }
@@ -100,55 +103,6 @@ fn main() {
             };
 
             write!(file, "{} {} {}\n", col.r as i32, col.g as i32, col.b as i32);
-        }
-    }
-}
-
-struct Camera {
-    lower_left_corner: Vec3,
-    horizontal: Vec3,
-    vertical: Vec3,
-    origin: Vec3,
-}
-
-impl Camera {
-    fn axis_aligned() -> Camera {
-        Camera {
-            lower_left_corner: Vec3 { x: -2.0, y: -1.0, z: -1.0 },
-            horizontal: Vec3 { x: 4.0, y: 0.0, z: 0.0 },
-            vertical: Vec3 { x: 0.0, y: 2.0, z: 0.0 },
-            origin: Vec3 { x: 0.0, y: 0.0, z: 0.0 },
-        }
-    }
-
-    fn new(
-        look_from: Vec3,
-        look_at: Vec3,
-        vert_up: Vec3,
-        vert_fov: f32,
-        aspect: f32
-    ) -> Camera {
-        let theta = vert_fov * std::f32::consts::PI / 180.0;
-        let half_height = (theta / 2.0).tan();
-        let half_width = aspect * half_height;
-        let w = (look_from - look_at).to_unit();
-        let u = cross(vert_up, w).to_unit();
-        let v = cross(w, u);
-        Camera {
-            lower_left_corner: look_from - u * half_width - v * half_height - w,
-            horizontal: 2.0 * u * half_width,
-            vertical: 2.0 * v * half_height,
-            origin: look_from,
-        }
-    }
-
-    fn ray(&self, u: f32, v: f32) -> Ray {
-        Ray {
-            origin: self.origin,
-            direction: self.lower_left_corner
-                + u * self.horizontal
-                + v * self.vertical
-                - self.origin,
         }
     }
 }
