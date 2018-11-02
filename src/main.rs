@@ -6,7 +6,7 @@ use std::io::{BufWriter, Write};
 use std::fs::OpenOptions;
 use rand::Rng;
 
-use raytracer::{Vec3, Hit, Ray, Rgb};
+use raytracer::{cross, Hit, Ray, Rgb, Vec3};
 use raytracer::{Dielectric, Lambertian, Reflective, Sphere};
 
 fn main() {
@@ -22,12 +22,23 @@ fn main() {
     };
     let mut file = BufWriter::new(file);
 
+    let mut rng = rand::thread_rng();
+
     let width = 800;
     let height = 400;
     let n_aa_samples = 24;
 
+    let look_from = Vec3 { x: -1.0, y: 1.0, z: 1.0 };
+    let look_to = Vec3 { x: 0.0, y: 0.0, z: -1.0 };
+    let vert_up = Vec3 { x: 0.0, y: 1.0, z: 0.0 };
+    let cam = Camera::new(
+        look_from,
+        look_to,
+        vert_up,
+        40 as f32,
+        width as f32 / height as f32
+    );
     let cam = Camera::axis_aligned();
-    let mut rng = rand::thread_rng();
 
     write!(file, "P3\n");
     write!(file, "{} {}\n", width, height);
@@ -107,6 +118,27 @@ impl Camera {
             horizontal: Vec3 { x: 4.0, y: 0.0, z: 0.0 },
             vertical: Vec3 { x: 0.0, y: 2.0, z: 0.0 },
             origin: Vec3 { x: 0.0, y: 0.0, z: 0.0 },
+        }
+    }
+
+    fn new(
+        look_from: Vec3,
+        look_at: Vec3,
+        vert_up: Vec3,
+        vert_fov: f32,
+        aspect: f32
+    ) -> Camera {
+        let theta = vert_fov * std::f32::consts::PI / 180.0;
+        let half_height = (theta / 2.0).tan();
+        let half_width = aspect * half_height;
+        let w = (look_from - look_at).to_unit();
+        let u = cross(vert_up, w).to_unit();
+        let v = cross(w, u);
+        Camera {
+            lower_left_corner: look_from - u * half_width - v * half_height - w,
+            horizontal: 2.0 * u * half_width,
+            vertical: 2.0 * v * half_height,
+            origin: look_from,
         }
     }
 
