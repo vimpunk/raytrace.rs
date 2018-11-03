@@ -1,4 +1,5 @@
 extern crate rand;
+extern crate image;
 
 mod raytracer;
 
@@ -9,25 +10,12 @@ use raytracer::{Camera, CameraInfo, Hit, Ray, Rgb, Vec3};
 use raytracer::{Dielectric, Lambertian, Reflective, Sphere};
 
 fn main() {
-    let path = "/tmp/raytracer.ppm";
-    let file = OpenOptions::new()
-        .read(true)
-        .write(true)
-        .create/*_new*/(true)
-        .open(&path);
-    let file = match file {
-        Ok(file) => file,
-        Err(msg) => panic!("Could not open file: {}", msg),
-    };
-    let mut file = BufWriter::new(file);
-
     let mut rng = rand::thread_rng();
 
     let width = 1200;
     let height = 600;
-    let n_aa_samples = 8;
+    let n_aa_samples = 24;
 
-    //let look_from = Vec3 { x: -1.5, y: 1.0, z: 1.0 };
     let look_from = Vec3 { x: 13.0, y: 2.0, z: 3.0 };
     let look_at = Vec3 { x: 0.0, y: 0.0, z: 0.0 };
     let view_up = Vec3 { x: 0.0, y: 1.0, z: 0.0 };
@@ -40,45 +28,80 @@ fn main() {
         aperture: 0.1,
         focus_distance: 10.0,
     });
-    let cam = Camera::axis_aligned();
+    //let cam = Camera::axis_aligned();
 
-    write!(file, "P3\n");
-    write!(file, "{} {}\n", width, height);
-    write!(file, "255\n");
+    //let world = basic_scene();
+    let world = rand_scene();
 
-    let world = basic_scene();
-    //let world = rand_scene();
-
+    let mut pixels = Vec::with_capacity(width * height);
+    // Reverse iteration over y coordinates so that image is written top to
+    // bottom, left to right.
     for y in (0..height).rev() {
         for x in 0..width {
-            // Anti-aliasing.
+            // Anti-aliasing
             let mut col = Vec3 { x: 0.0, y: 0.0, z: 0.0 };
             for _ in 0..n_aa_samples {
                 let u = (x as f32 + rng.gen::<f32>()) / width as f32;
                 let v = (y as f32 + rng.gen::<f32>()) / height as f32;
                 let ray = cam.ray(u, v);
-                col += color(&ray, &world, 0);
+                col += compute_color(&ray, &world, 0);
             }
             col /= n_aa_samples as f32;
-            let col = Rgb {
-                r: 255.99 * col.x.sqrt(),
-                g: 255.99 * col.y.sqrt(),
-                b: 255.99 * col.z.sqrt(),
-            };
-
-            write!(file, "{} {} {}\n", col.r as i32, col.g as i32, col.b as i32);
+            let col = Rgb::from(col).gamma_correct();
+            let col = Rgb::from(Vec3::from(col) * 255.99);
+            pixels.push(col);
         }
+    }
+
+    save_ppm(width, height, &pixels);
+    save_png(width, height, &pixels);
+}
+
+fn save_ppm(width: usize, height: usize, pixels: &Vec<Rgb>) {
+    let path = "/tmp/raytracer.ppm";
+    let file = OpenOptions::new()
+        .read(true)
+        .write(true)
+        .create/*_new*/(true)
+        .open(&path);
+    let file = match file {
+        Ok(file) => file,
+        Err(msg) => panic!("Could not open file: {}", msg),
+    };
+    let mut file = BufWriter::new(file);
+
+    write!(file, "P3\n");
+    write!(file, "{} {}\n", width, height);
+    write!(file, "255\n");
+
+    for pixel in pixels.iter() {
+        write!(file, "{} {} {}\n", pixel.r as i32, pixel.g as i32, pixel.b as i32);
     }
 }
 
-fn color<T: Hit>(ray: &Ray, world: &T, depth: i32) -> Vec3 {
+fn save_png(width: usize, height: usize, pixels: &Vec<Rgb>) {
+    let mut img = image::RgbImage::new(width as u32, height as u32);
+    for y in 0..height {
+        for x in 0..width {
+            let idx = x + y * width;
+            let pixel = pixels[idx];
+            let pixel = image::Rgb::<u8> {
+                data: [pixel.r as u8, pixel.g as u8, pixel.b as u8]
+            };
+            img.put_pixel(x as u32, y as u32, pixel);
+        }
+    }
+    img.save("/tmp/raytracing_weekend.png").unwrap();
+}
+
+fn compute_color<T: Hit>(ray: &Ray, world: &T, depth: i32) -> Vec3 {
     // See if the ray hits the world, otherwise paint the background.
     if let Some(hit) = world.hit(&ray, 0.001, std::f32::MAX) {
         let neutral = Vec3 { x: 0.0, y: 0.0, z: 0.0 };
         if depth >= 50 {
             neutral
         } else if let Some(scatter) = hit.material.scatter(ray, hit.point, hit.normal) {
-            scatter.attenuation * color(&scatter.ray, world, depth + 1)
+            scatter.attenuation * compute_color(&scatter.ray, world, depth + 1)
         } else {
             neutral
         }

@@ -5,3 +5,4 @@ authors = ["mandreyel <mandreyel@protonmail.com>"]
 
 [dependencies]
 rand = "0.5"
+image = "*"

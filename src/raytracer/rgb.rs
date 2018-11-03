@@ -15,4 +15,12 @@ impl Rgb {
             b: v.z,
         }
     }
+
+    pub fn gamma_correct(&self) -> Rgb {
+        Rgb {
+            r: self.r.sqrt(),
+            g: self.g.sqrt(),
+            b: self.b.sqrt(),
+        }
+    }
 }

@@ -2,7 +2,10 @@ extern crate rand;
 
 use raytracer::vec3::*;
 use raytracer::ray::Ray;
+
 use rand::Rng;
+
+use image::RgbImage;
 
 pub struct Camera {
     origin: Vec3,
