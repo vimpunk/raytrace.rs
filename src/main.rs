@@ -23,23 +23,22 @@ fn main() {
 
     let mut rng = rand::thread_rng();
 
-    let width = 800;
-    let height = 400;
-    let n_aa_samples = 24;
+    let width = 1200;
+    let height = 600;
+    let n_aa_samples = 8;
 
-    let look_from = Vec3 { x: -1.5, y: 1.0, z: 1.0 };
-    let look_at = Vec3 { x: 0.0, y: 0.0, z: -1.0 };
+    //let look_from = Vec3 { x: -1.5, y: 1.0, z: 1.0 };
+    let look_from = Vec3 { x: 13.0, y: 2.0, z: 3.0 };
+    let look_at = Vec3 { x: 0.0, y: 0.0, z: 0.0 };
     let view_up = Vec3 { x: 0.0, y: 1.0, z: 0.0 };
-    let aperture = 0.1;
-    let focus_dist = (look_from - look_at).len();
     let cam = Camera::new(CameraInfo {
         look_from: look_from,
         look_at: look_at,
         view_up: view_up,
-        vert_fov: 40 as f32,
+        vert_fov: 20 as f32,
         aspect: width as f32 / height as f32,
-        aperture: aperture,
-        focus_distance: focus_dist,
+        aperture: 0.1,
+        focus_distance: 10.0,
     });
     let cam = Camera::axis_aligned();
 
@@ -47,43 +46,8 @@ fn main() {
     write!(file, "{} {}\n", width, height);
     write!(file, "255\n");
 
-    let world: Vec<Box<dyn Hit>> = vec![
-        Box::new(Sphere {
-            center: Vec3 { x: 0.0, y: 0.0, z: -1.0 },
-            radius: 0.5,
-            material: Box::new(Lambertian {
-                albedo: Vec3 { x: 0.8, y: 0.3, z: 0.3 }
-            }),
-        }),
-        Box::new(Sphere {
-            center: Vec3 { x: 0.0, y: -100.5, z: -1.0 },
-            radius: 100.0,
-            material: Box::new(Lambertian {
-                albedo: Vec3 { x: 0.5, y: 0.5, z: 0.5 }
-            }),
-        }),
-        Box::new(Sphere {
-            center: Vec3 { x: 1.0, y: 0.0, z: -1.0 },
-            radius: 0.5,
-            material: Box::new(Reflective {
-                albedo: Vec3 { x: 0.4, y: 0.6, z: 0.8 },
-                fuzz: 0.9,
-            }),
-        }),
-        //Box::new(Sphere {
-            //center: Vec3 { x: -1.0, y: 0.0, z: -1.0 },
-            //radius: 0.5,
-            //material: Box::new(Dielectric { refraction_index: 1.5 }),
-        //}),
-        Box::new(Sphere {
-            center: Vec3 { x: -1.0, y: 0.0, z: -1.0 },
-            radius: 0.5,
-            material: Box::new(Reflective {
-                albedo: Vec3 { x: 0.8, y: 0.8, z: 0.8 },
-                fuzz: 0.3,
-            }),
-        }),
-    ];
+    let world = basic_scene();
+    //let world = rand_scene();
 
     for y in (0..height).rev() {
         for x in 0..width {
@@ -128,4 +92,129 @@ fn color<T: Hit>(ray: &Ray, world: &T, depth: i32) -> Vec3 {
         let ler = (1.0 - t) * start_val + t * end_val;
         ler
     }
+}
+
+fn basic_scene() -> Vec<Box<dyn Hit>> {
+    vec![
+        Box::new(Sphere {
+            center: Vec3 { x: 0.0, y: 0.0, z: -1.0 },
+            radius: 0.5,
+            material: Box::new(Lambertian {
+                albedo: Vec3 { x: 0.8, y: 0.3, z: 0.3 }
+            }),
+        }),
+        Box::new(Sphere {
+            center: Vec3 { x: 0.0, y: -100.5, z: -1.0 },
+            radius: 100.0,
+            material: Box::new(Lambertian {
+                albedo: Vec3 { x: 0.5, y: 0.5, z: 0.5 }
+            }),
+        }),
+        Box::new(Sphere {
+            center: Vec3 { x: 1.0, y: 0.0, z: -1.0 },
+            radius: 0.5,
+            material: Box::new(Reflective {
+                albedo: Vec3 { x: 0.4, y: 0.6, z: 0.8 },
+                fuzz: 0.9,
+            }),
+        }),
+        //Box::new(Sphere {
+            //center: Vec3 { x: -1.0, y: 0.0, z: -1.0 },
+            //radius: 0.5,
+            //material: Box::new(Dielectric { refraction_index: 1.5 }),
+        //}),
+        Box::new(Sphere {
+            center: Vec3 { x: -1.0, y: 0.0, z: -1.0 },
+            radius: 0.5,
+            material: Box::new(Reflective {
+                albedo: Vec3 { x: 0.8, y: 0.8, z: 0.8 },
+                fuzz: 0.3,
+            }),
+        }),
+    ]
+}
+
+fn rand_scene() -> Vec<Box<dyn Hit>> {
+    let n = 500;
+    let mut world: Vec<Box<dyn Hit>> = Vec::with_capacity(n);
+    world.push(Box::new(Sphere {
+        center: Vec3 { x: 0.0, y: -1000.0, z: 0.0 },
+        radius: 1000.0,
+        material: Box::new(Lambertian {
+            albedo: Vec3 { x: 0.5, y: 0.5, z: 0.5 },
+        }),
+    }));
+    let mut rng = rand::thread_rng();
+
+    for a in -11..11 {
+        for b in -11..11 {
+            let center = Vec3 {
+                x: a as f32 + 0.9 * rng.gen::<f32>(),
+                y: 0.2,
+                z: b as f32 + 0.9 * rng.gen::<f32>(),
+            };
+            if (center - Vec3 { x: 4.0, y: 0.2, z: 0.0 }).len() > 0.9 {
+                let r = rng.gen::<f32>();
+                if r < 0.8 {
+                    world.push(Box::new(Sphere {
+                        center: center,
+                        radius: 0.2,
+                        material: Box::new(Lambertian {
+                            albedo: Vec3 {
+                                x: rng.gen::<f32>() * rng.gen::<f32>(),
+                                y: rng.gen::<f32>() * rng.gen::<f32>(),
+                                z: rng.gen::<f32>() * rng.gen::<f32>(),
+                            },
+                        }),
+                    }));
+                } else if r < 0.95 {
+                    world.push(Box::new(Sphere {
+                        center: center,
+                        radius: 0.2,
+                        material: Box::new(Reflective {
+                            albedo: Vec3 {
+                                x: 0.5 * (1.0 + rng.gen::<f32>()),
+                                y: 0.5 * (1.0 + rng.gen::<f32>()),
+                                z: 0.5 * (1.0 + rng.gen::<f32>()),
+                            },
+                            fuzz: rng.gen::<f32>() * rng.gen::<f32>(),
+                        }),
+                    }));
+                } else {
+                    world.push(Box::new(Sphere {
+                        center: center,
+                        radius: 0.2,
+                        material: Box::new(Dielectric { refraction_index: 1.5 }),
+                    }));
+                }
+            }
+        }
+    }
+
+    world.push(Box::new(Sphere {
+        center: Vec3 { x: 0.0, y: 1.0, z: 0.0 },
+        radius: 1.0,
+        material: Box::new(Dielectric { refraction_index: 1.5 }),
+    }));
+    world.push(Box::new(Sphere {
+        center: Vec3 { x: -4.0, y: 1.0, z: 0.0 },
+        radius: 1.0,
+        material: Box::new(Lambertian {
+            albedo: Vec3 { x: 0.4, y: 0.2, z: 0.1 },
+        }),
+    }));
+    world.push(Box::new(Sphere {
+        center: Vec3 { x: 4.0, y: 1.0, z: 0.0 },
+        radius: 1.0,
+        material: Box::new(Reflective {
+            albedo: Vec3 {
+                x: 0.7,
+                y: 0.6,
+                z: 0.5,
+            },
+            fuzz: 0.0,
+        }),
+    }));
+
+    world
 }
