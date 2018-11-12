@@ -45,8 +45,8 @@ pub struct CameraInfo {
 }
 
 impl Camera {
-    pub fn axis_aligned() -> Camera {
-        Camera {
+    pub fn axis_aligned() -> Self {
+        Self {
             lower_left_corner: Vec3 { x: -2.0, y: -1.0, z: -1.0 },
             horizontal: Vec3 { x: 4.0, y: 0.0, z: 0.0 },
             vertical: Vec3 { x: 0.0, y: 2.0, z: 0.0 },
@@ -58,7 +58,7 @@ impl Camera {
         }
     }
 
-    pub fn new(info: CameraInfo) -> Camera {
+    pub fn new(info: CameraInfo) -> Self {
         // y
         // ^  /|
         // | / | h
@@ -75,7 +75,7 @@ impl Camera {
         let z0 = (info.look_from - info.look_at).to_unit();
         let x0 = cross(info.view_up, z0).to_unit();
         let y0 = cross(z0, x0);
-        Camera {
+        Self {
             origin: info.look_from,
             // Subtract from the camera origin each component of the camera's
             // basis multiplied by the canvas dimensions and the focus distance.
